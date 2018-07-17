@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// Client version
+// Version : Client version
 const Version = "0.3.0"
 
 // Protocol tags
@@ -353,7 +353,7 @@ func (c *Client) Close() {
 	close(c.done)
 }
 
-// Ping the server to ensure it is responding, and to keep the session alive.
+// ServerPing : Ping the server to ensure it is responding, and to keep the session alive.
 // The server may disconnect clients that have sent no requests for roughly 10 minutes.
 //
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-ping
@@ -434,7 +434,7 @@ func (c *Client) ServerDonationAddress() (string, error) {
 	return res.Result.(string), nil
 }
 
-// Return a list of features and services supported by the server
+// ServerFeatures : Return a list of features and services supported by the server
 //
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-donation-address
 func (c *Client) ServerFeatures() (info *ServerInfo, err error) {
@@ -458,7 +458,7 @@ func (c *Client) ServerFeatures() (info *ServerInfo, err error) {
 	return
 }
 
-// Return a list of peer servers
+// ServerPeers : Return a list of peer servers
 //
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-peers-subscribe
 func (c *Client) ServerPeers() (peers []*Peer, err error) {
@@ -507,11 +507,49 @@ func (c *Client) AddressBalance(address string) (balance *Balance, err error) {
 	return
 }
 
+// ScripthashBalance will synchronously run a 'blockchain.scripthash.get_balance' operation
+//
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-scripthash-get-balance
+func (c *Client) ScripthashBalance(scripthash string) (balance *Balance, err error) {
+	res, err := c.syncRequest(c.req("blockchain.scripthash.get_balance", scripthash))
+	if err != nil {
+		return
+	}
+
+	if res.Error != nil {
+		err = errors.New(res.Error.Message)
+		return
+	}
+
+	b, _ := json.Marshal(res.Result)
+	json.Unmarshal(b, &balance)
+	return
+}
+
 // AddressHistory will synchronously run a 'blockchain.address.get_history' operation
 //
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-address-get-history
 func (c *Client) AddressHistory(address string) (list *[]Tx, err error) {
 	res, err := c.syncRequest(c.req("blockchain.address.get_history", address))
+	if err != nil {
+		return
+	}
+
+	if res.Error != nil {
+		err = errors.New(res.Error.Message)
+		return
+	}
+
+	b, _ := json.Marshal(res.Result)
+	json.Unmarshal(b, &list)
+	return
+}
+
+// ScripthashHistory will synchronously run a 'blockchain.scripthash.get_history' operation
+//
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-scripthash-get-history
+func (c *Client) ScripthashHistory(scripthash string) (list *[]Tx, err error) {
+	res, err := c.syncRequest(c.req("blockchain.scripthash.get_history", scripthash))
 	if err != nil {
 		return
 	}
