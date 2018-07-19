@@ -1,6 +1,8 @@
 package electrum
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // VersionInfo contains the version information returned by the server
 type VersionInfo struct {
@@ -105,12 +107,26 @@ type request struct {
 	Params []string `json:"params"`
 }
 
+type paramverbose struct {
+	hash  string
+	param [2]string
+}
+
+type requestverbose struct {
+	RPC    string       `json:"jsonrpc"`
+	Id     int          `json:"id"`
+	Method string       `json:"method"`
+	Params paramverbose `json:"params"`
+}
+
 // Properly encode a request object and append the message delimiter
 func (r *request) encode() ([]byte, error) {
 	if r.RPC == "" {
 		r.RPC = "2.0"
 	}
+
 	b, err := json.Marshal(r)
+
 	if err != nil {
 		return nil, err
 	}

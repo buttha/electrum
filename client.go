@@ -174,6 +174,7 @@ func New(options *Options) (*Client, error) {
 
 // Build a request object
 func (c *Client) req(name string, params ...string) *request {
+
 	c.Lock()
 	defer c.Unlock()
 
@@ -209,6 +210,7 @@ func (c *Client) handleMessages() {
 			if c.log != nil {
 				c.log.Println(m)
 			}
+			//fmt.Printf("%+v", string(m))
 			resp := &response{}
 			if err := json.Unmarshal(m, resp); err != nil {
 				break
@@ -334,6 +336,13 @@ func (c *Client) syncRequest(req *request) (*response, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// detect "verbose:true" and transform to "verbose":true
+	//j := strings.Replace(string(b), "\"verbose:true\"", "{\"verbose\":1}", 1)
+	j := strings.Replace(string(b), "\"verbose:true\"", "true", 1)
+	b = []byte(j)
+	//fmt.Printf("%+v\n", string(b))
+
 	if err := c.transport.sendMessage(b); err != nil {
 		return nil, err
 	}
@@ -651,6 +660,25 @@ func (c *Client) GetTransaction(hash string) (string, error) {
 	}
 
 	return res.Result.(string), nil
+}
+
+// VerboseTx : type for GetTransactionVerbose method's return
+type VerboseTx interface{}
+
+// GetTransactionVerbose will synchronously run a 'blockchain.transaction.get' operation with verbose parameter
+//
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain.transaction.get
+func (c *Client) GetTransactionVerbose(hash string) (VerboseTx, error) {
+	res, err := c.syncRequest(c.req("blockchain.transaction.get", hash, "verbose:true"))
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Error != nil {
+		return nil, errors.New(res.Error.Message)
+	}
+
+	return res.Result, nil
 }
 
 // EstimateFee will synchronously run a 'blockchain.estimatefee' operation

@@ -105,7 +105,7 @@ func (t *transport) sendMessage(message []byte) error {
 	if !t.ready {
 		return ErrUnreachableHost
 	}
-
+	//fmt.Printf("%+v", string(message))
 	_, err := t.conn.Write(message)
 	return err
 }
