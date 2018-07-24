@@ -47,6 +47,5 @@ When done with the client instance free-up resources and terminate network commu
   client.Close();
 
 Protocol specification is available at:
-http://docs.electrum.org/en/latest/protocol.html
-*/
+http://docs.electrum.org/en/latest/protocol.html */
 package electrum

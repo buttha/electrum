@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Known connection state values
+// ConnectionState : Known connection state values
 type ConnectionState string
 
 // Connection state flags
