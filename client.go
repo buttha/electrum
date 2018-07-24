@@ -278,9 +278,13 @@ WAIT:
 
 	// Restart existing subscriptions
 	for id, sub := range c.subs {
-		c.removeSubscription(id)
-		sub.messages = make(chan *response)
-		c.startSubscription(sub)
+		if sub.ctx != nil { // buttha: solved an "invalid memory address or nil pointer dereference"
+			c.removeSubscription(id)
+			sub.messages = make(chan *response)
+			c.startSubscription(sub)
+		} else {
+			c.stopResuming()
+		}
 	}
 }
 
