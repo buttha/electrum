@@ -405,8 +405,10 @@ func (c *Client) ServerVersion() (*VersionInfo, error) {
 		var d []string
 		b, _ := json.Marshal(res.Result)
 		json.Unmarshal(b, &d)
-		info.Software = d[0]
-		info.Protocol = d[1]
+		if len(d) == 2 { // fix an index out of range error
+			info.Software = d[0]
+			info.Protocol = d[1]
+		}
 	}
 	return info, nil
 }
