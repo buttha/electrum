@@ -29,11 +29,13 @@ type transport struct {
 	opts     *transportOptions
 	state    chan ConnectionState
 	r        *bufio.Reader
+	reconn   bool // buttha: control reconnect option
 }
 
 type transportOptions struct {
-	address string
-	tls     *tls.Config
+	address   string
+	tls       *tls.Config
+	reconnect bool // buttha
 }
 
 // Get network connection
@@ -132,7 +134,9 @@ LOOP:
 			// Detect dropped connections
 			if err == io.EOF {
 				t.state <- Disconnected
-				t.reconnect()
+				if t.reconn {
+					t.reconnect()
+				}
 				break LOOP
 			}
 

@@ -59,6 +59,9 @@ type Options struct {
 
 	// If provided, will be used as logging sink
 	Log *log.Logger
+
+	// buttha: enable / disable client reconnect
+	Reconnect bool
 }
 
 // Client defines the protocol client instance structure and interface
@@ -97,8 +100,9 @@ type subscription struct {
 // New will create and start processing on a new client instance
 func New(options *Options) (*Client, error) {
 	t, err := getTransport(&transportOptions{
-		address: options.Address,
-		tls:     options.TLS,
+		address:   options.Address,
+		tls:       options.TLS,
+		reconnect: options.Reconnect,
 	})
 	if err != nil {
 		return nil, err
