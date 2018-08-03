@@ -149,7 +149,8 @@ func New(options *Options) (*Client, error) {
 				select {
 				case <-client.ping.C:
 					// "server.ping" is not recognized by the server in the current release (1.4.3)
-					b, _ := client.req("server.version", client.Version, client.Protocol).encode()
+					//b, _ := client.req("server.version", client.Version, client.Protocol).encode()
+					b, _ := client.req("server.ping").encode() // buttha: keep alive by server.ping, not server.version
 					client.transport.sendMessage(b)
 				case <-client.bgProcessing.Done():
 					return
