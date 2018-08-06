@@ -34,11 +34,18 @@ type transport struct {
 type transportOptions struct {
 	address string
 	tls     *tls.Config
+	timeout uint64
 }
 
 // Get network connection
 func connect(opts *transportOptions) (net.Conn, error) {
-	conn, err := net.Dial("tcp", opts.address)
+	var err error
+	var conn net.Conn
+	if opts.timeout > 0 {
+		conn, err = net.DialTimeout("tcp", opts.address, time.Duration(opts.timeout)*time.Second)
+	} else {
+		conn, err = net.Dial("tcp", opts.address)
+	}
 	if err != nil {
 		return nil, err
 	}

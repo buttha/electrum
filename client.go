@@ -59,6 +59,9 @@ type Options struct {
 
 	// If provided, will be used as logging sink
 	Log *log.Logger
+
+	// buttha: if provided, this is the connection timeout
+	Timeout uint64
 }
 
 // Client defines the protocol client instance structure and interface
@@ -71,6 +74,9 @@ type Client struct {
 
 	// Protocol version preferred by the client instance
 	Protocol string
+
+	// buttha: connection timeout
+	Timeout uint64
 
 	done         chan bool
 	transport    *transport
@@ -99,6 +105,7 @@ func New(options *Options) (*Client, error) {
 	t, err := getTransport(&transportOptions{
 		address: options.Address,
 		tls:     options.TLS,
+		timeout: options.Timeout,
 	})
 	if err != nil {
 		return nil, err
