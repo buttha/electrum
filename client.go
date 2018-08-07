@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -209,6 +210,9 @@ func (c *Client) handleMessages() {
 				c.removeSubscription(i)
 			}
 			c.cleanUp()
+			c = &Client{}        // buttha: fix memory leak (client closed but not garbage collected)
+			c = nil              //
+			debug.FreeOSMemory() //
 			return
 		case err := <-c.transport.errors:
 			if c.log != nil {
