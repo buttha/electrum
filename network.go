@@ -162,8 +162,14 @@ LOOP:
 			}
 
 			if err != nil {
+				/* buttha
 				t.errors <- err
 				break
+				*/
+				t.errors <- err
+				t.conn.Close()
+				t.state <- Closed
+				break LOOP
 			}
 			t.messages <- line
 		}

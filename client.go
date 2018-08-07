@@ -179,7 +179,6 @@ func New(options *Options) (*Client, error) {
 					go client.resumeSubscriptions()
 				}
 				if s == Closed { // added by buttha
-					client.done <- true
 					return
 				}
 			case <-client.bgProcessing.Done():
@@ -387,6 +386,7 @@ func (c *Client) syncRequest(req *request) (*response, error) {
 
 // Close will finish execution and properly terminate the underlying network transport
 func (c *Client) Close() {
+	c.transport.done <- true // buttha
 	c.transport.close()
 	close(c.done)
 }
