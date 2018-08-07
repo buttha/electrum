@@ -32,9 +32,10 @@ type transport struct {
 }
 
 type transportOptions struct {
-	address string
-	tls     *tls.Config
-	timeout uint64
+	address   string
+	tls       *tls.Config
+	timeout   uint64
+	reconnect bool
 }
 
 // Get network connection
@@ -125,7 +126,17 @@ func (t *transport) close() {
 // Wait for new messages on the network connection until
 // the instance is signaled to stop
 func (t *transport) listen() {
-	t.state <- Ready
+
+	defer t.conn.Close() // buttha
+
+	select { // buttha
+	case t.state <- Ready:
+	case <-time.After(time.Duration(t.opts.timeout) * time.Second):
+		t.conn.Close()
+		t.state <- Closed
+		return
+	}
+
 LOOP:
 	for {
 		select {
@@ -138,9 +149,16 @@ LOOP:
 
 			// Detect dropped connections
 			if err == io.EOF {
-				t.state <- Disconnected
-				t.reconnect()
-				break LOOP
+				if t.opts.reconnect {
+					// buttha: it keeps trying to connect forever. Too many ESTABLISHED connections: memory leak
+					t.state <- Disconnected
+					t.reconnect()
+					break LOOP
+				} else {
+					t.conn.Close()
+					t.state <- Closed
+					break LOOP
+				}
 			}
 
 			if err != nil {

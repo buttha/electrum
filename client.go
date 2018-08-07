@@ -63,6 +63,9 @@ type Options struct {
 
 	// buttha: if provided, this is the connection timeout
 	Timeout uint64
+
+	// buttha: attempt client reconnection
+	Reconnect bool
 }
 
 // Client defines the protocol client instance structure and interface
@@ -78,6 +81,9 @@ type Client struct {
 
 	// buttha: connection timeout
 	Timeout uint64
+
+	// buttha: attempt client reconnection
+	Reconnect bool
 
 	done         chan bool
 	transport    *transport
@@ -104,9 +110,10 @@ type subscription struct {
 // New will create and start processing on a new client instance
 func New(options *Options) (*Client, error) {
 	t, err := getTransport(&transportOptions{
-		address: options.Address,
-		tls:     options.TLS,
-		timeout: options.Timeout,
+		address:   options.Address,
+		tls:       options.TLS,
+		timeout:   options.Timeout,
+		reconnect: options.Reconnect,
 	})
 	if err != nil {
 		return nil, err
@@ -171,6 +178,10 @@ func New(options *Options) (*Client, error) {
 				if s == Reconnected && len(client.subs) > 0 {
 					go client.resumeSubscriptions()
 				}
+				if s == Closed { // added by buttha
+					client.done <- true
+					return
+				}
 			case <-client.bgProcessing.Done():
 				return
 			}
@@ -210,10 +221,12 @@ func (c *Client) handleMessages() {
 				c.removeSubscription(i)
 			}
 			c.cleanUp()
-			c = &Client{}        // buttha: fix memory leak (client closed but not garbage collected)
-			c = nil              //
-			debug.FreeOSMemory() //
+			c.transport.conn.Close() // buttha: fix memory leak:
+			c = &Client{}            // client closed but not garbage collected and tcp connection kept established
+			c = nil                  //
+			debug.FreeOSMemory()     //
 			return
+
 		case err := <-c.transport.errors:
 			if c.log != nil {
 				c.log.Println(err)
