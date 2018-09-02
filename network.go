@@ -6,6 +6,8 @@ import (
 	"io"
 	"net"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 // ConnectionState : Known connection state values
@@ -36,13 +38,21 @@ type transportOptions struct {
 	tls       *tls.Config
 	timeout   uint64
 	reconnect bool
+	tor       string
 }
 
 // Get network connection
 func connect(opts *transportOptions) (net.Conn, error) {
 	var err error
 	var conn net.Conn
-	if opts.timeout > 0 {
+	var dialer proxy.Dialer
+
+	if opts.tor != "" {
+		dialer, err = proxy.SOCKS5("tcp", opts.tor, nil, proxy.Direct)
+		if err == nil {
+			conn, err = dialer.Dial("tcp", opts.address)
+		}
+	} else if opts.timeout > 0 {
 		conn, err = net.DialTimeout("tcp", opts.address, time.Duration(opts.timeout)*time.Second)
 	} else {
 		conn, err = net.Dial("tcp", opts.address)

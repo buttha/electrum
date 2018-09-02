@@ -66,6 +66,9 @@ type Options struct {
 
 	// buttha: attempt client reconnection
 	Reconnect bool
+
+	// buttha: if "" don't use tor. Otherwhise it's tor's socks address
+	Tor string
 }
 
 // Client defines the protocol client instance structure and interface
@@ -114,6 +117,7 @@ func New(options *Options) (*Client, error) {
 		tls:       options.TLS,
 		timeout:   options.Timeout,
 		reconnect: options.Reconnect,
+		tor:       options.Tor,
 	})
 	if err != nil {
 		return nil, err
